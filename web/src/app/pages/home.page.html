@@ -1,0 +1,152 @@
+<main class="page">
+  <section class="hero">
+    <h1>Calculadora de Orcamento da Festa</h1>
+    <p>Descubra em segundos uma estimativa por categoria para festas no RJ.</p>
+  </section>
+
+  <section class="calculator card">
+    <h2>Monte seu orcamento</h2>
+    <form [formGroup]="form" (ngSubmit)="calculate()" class="form-grid">
+      <label>
+        Tipo de festa
+        <select formControlName="eventType">
+          @for (event of eventTypes; track event) {
+            <option [value]="event">{{ event }}</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        Convidados
+        <input type="number" formControlName="guests" min="10" max="500" />
+      </label>
+
+      <label>
+        Cidade (RJ)
+        <select formControlName="city">
+          @for (city of cities; track city) {
+            <option [value]="city">{{ city }}</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        Bairro (opcional)
+        <input type="text" formControlName="neighborhood" placeholder="Ex.: Icarai" />
+      </label>
+
+      <label>
+        Padrao
+        <select formControlName="profile">
+          @for (profile of profiles; track profile) {
+            <option [value]="profile">{{ profile }}</option>
+          }
+        </select>
+      </label>
+
+      <button type="submit">Calcular</button>
+    </form>
+
+    @if (statusMessage()) {
+      <p class="status">{{ statusMessage() }}</p>
+    }
+  </section>
+
+  @if (result(); as budget) {
+    <section class="result card" aria-live="polite">
+      <div class="result-header">
+        <h2>Total estimado</h2>
+        <p>
+          {{ budget.total.med | currency: 'BRL':'symbol':'1.0-0':'pt-BR' }}
+          <span>
+            ({{ budget.total.min | currency: 'BRL':'symbol':'1.0-0':'pt-BR' }} -
+            {{ budget.total.max | currency: 'BRL':'symbol':'1.0-0':'pt-BR' }})
+          </span>
+        </p>
+      </div>
+
+      <p class="meta">
+        Regiao: {{ budget.regionApplied }} | Calculado em
+        {{ budget.createdAtIso | date: 'dd/MM/yyyy HH:mm':'':'pt-BR' }}
+      </p>
+      <p class="meta">Baseado em {{ budget.referencesUsed }} referencias publicas.</p>
+      @if (budget.fallbackUsed) {
+        <p class="alert">Amostra local insuficiente. Foi aplicado fallback RJ geral.</p>
+      }
+
+      <div class="breakdown">
+        @for (item of budget.categories; track trackByCategory($index, item)) {
+          <details open>
+            <summary>{{ item.category }}</summary>
+            <p>
+              {{ item.med | currency: 'BRL':'symbol':'1.0-0':'pt-BR' }}
+              <span>
+                ({{ item.min | currency: 'BRL':'symbol':'1.0-0':'pt-BR' }} -
+                {{ item.max | currency: 'BRL':'symbol':'1.0-0':'pt-BR' }})
+              </span>
+            </p>
+            <small>
+              Amostra: {{ item.sampleSize }} | Confiabilidade: {{ item.reliability }} | {{ item.sourceLabel }}
+            </small>
+          </details>
+        }
+      </div>
+
+      <div class="actions">
+        <a [routerLink]="['/orcamento', budget.id]">Abrir pagina compartilhavel</a>
+        <button type="button" (click)="copyLink()">Copiar link</button>
+        <a [href]="whatsappLink()" target="_blank" rel="noopener">Compartilhar no WhatsApp</a>
+        <button type="button" (click)="exportPdf()">Exportar PDF</button>
+        <button type="button" (click)="openLead()">Salvar orcamento</button>
+      </div>
+    </section>
+  }
+
+  <section class="info card">
+    <h2>Como calculamos</h2>
+    <p>
+      A estimativa combina tipo de evento, cidade e numero de convidados, usando referencias publicas
+      organizadas por faixa de preco (minimo, mediano e maximo).
+    </p>
+  </section>
+
+  <section class="faq card">
+    <h2>FAQ</h2>
+    <details>
+      <summary>O valor final pode mudar?</summary>
+      <p>Sim. Bairro, data, pacote e disponibilidade de fornecedores alteram o preco.</p>
+    </details>
+    <details>
+      <summary>Posso usar em celular?</summary>
+      <p>Sim. O resultado aparece em cards colapsaveis para reduzir rolagem.</p>
+    </details>
+  </section>
+
+  <section class="contact card">
+    <h2>Contato</h2>
+    <p>Duvidas ou parceria? Envie um e-mail para contato@statsfestas.com</p>
+  </section>
+</main>
+
+@if (leadOpen()) {
+  <div class="modal-backdrop" (click)="closeLead()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <h3>Salvar orcamento</h3>
+      <p>Informe e-mail ou WhatsApp para registrar seu contato.</p>
+      <form [formGroup]="leadForm" class="lead-form">
+        <label>
+          E-mail
+          <input type="email" formControlName="email" />
+        </label>
+        <label>
+          WhatsApp
+          <input type="text" formControlName="whatsapp" placeholder="(21) 99999-9999" />
+        </label>
+      </form>
+      <div class="modal-actions">
+        <button type="button" (click)="closeLead()">Cancelar</button>
+        <button type="button" (click)="saveLead()">Salvar</button>
+      </div>
+    </div>
+  </div>
+}

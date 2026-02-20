@@ -1,0 +1,41 @@
+<main class="page">
+  <a routerLink="/">Voltar para calculadora</a>
+
+  @if (!budget()) {
+    <section class="card">
+      <h1>Orcamento nao encontrado</h1>
+      <p>O link pode ter expirado ou nao existe neste navegador.</p>
+    </section>
+  } @else {
+    <section class="card">
+      <h1>Orcamento compartilhado</h1>
+      <p>
+        {{ budget()!.input.eventType }} | {{ budget()!.input.guests }} convidados | {{ budget()!.input.city }}
+      </p>
+      <p>
+        Total mediano: {{ budget()!.total.med | currency: 'BRL':'symbol':'1.0-0':'pt-BR' }}
+      </p>
+      <p>
+        Faixa: {{ budget()!.total.min | currency: 'BRL':'symbol':'1.0-0':'pt-BR' }} -
+        {{ budget()!.total.max | currency: 'BRL':'symbol':'1.0-0':'pt-BR' }}
+      </p>
+      <p>
+        Calculado em {{ budget()!.createdAtIso | date: 'dd/MM/yyyy HH:mm':'':'pt-BR' }} |
+        Regiao aplicada: {{ budget()!.regionApplied }}
+      </p>
+
+      <div class="breakdown">
+        @for (item of budget()!.categories; track item.category) {
+          <details>
+            <summary>{{ item.category }}</summary>
+            <p>{{ item.med | currency: 'BRL':'symbol':'1.0-0':'pt-BR' }}</p>
+            <small>
+              {{ item.min | currency: 'BRL':'symbol':'1.0-0':'pt-BR' }} -
+              {{ item.max | currency: 'BRL':'symbol':'1.0-0':'pt-BR' }} | Amostra: {{ item.sampleSize }}
+            </small>
+          </details>
+        }
+      </div>
+    </section>
+  }
+</main>
